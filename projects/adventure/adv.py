@@ -5,33 +5,6 @@ from world import World
 import random
 from ast import literal_eval
 
-class Queue():
-    def __init__(self):
-        self.queue = []
-    def enqueue(self, value):
-        self.queue.append(value)
-    def dequeue(self):
-        if self.size() > 0:
-            return self.queue.pop(0)
-        else:
-            return None
-    def size(self):
-        return len(self.queue)
-
-class Stack():
-    def __init__(self):
-        self.stack = []
-    def push(self, value):
-        self.stack.append(value)
-    def pop(self):
-        if self.size() > 0:
-            return self.stack.pop()
-        else:
-            return None
-    def size(self):
-        return len(self.stack)
-
-
 # Load world
 world = World()
 
@@ -40,8 +13,8 @@ world = World()
 # map_file = "maps/test_line.txt"
 # map_file = "maps/test_cross.txt"
 # map_file = "maps/test_loop.txt"
-# map_file = "maps/test_loop_fork.txt"
-map_file = "maps/main_maze.txt"
+map_file = "maps/test_loop_fork.txt"
+# map_file = "maps/main_maze.txt"
 
 # Loads the map into a dictionary
 room_graph = literal_eval(open(map_file, "r").read())
@@ -61,7 +34,6 @@ starting_room = player.current_room
 visited = {}  # dictionary
 reversed_direction = []
 current_room = starting_room
-previous_room = []
 
 # Return a direction that is unexplored
 def find_next_move(visited, current_room):
@@ -75,38 +47,39 @@ def find_next_move(visited, current_room):
 		return None
 
 	
-def find_unexplored_room():
+def find_unexplored_room_exits():
 	while True:
 		back_direction = reversed_direction.pop()
 		traversal_path.append(back_direction)
 		player.travel(back_direction)
 		next_room = player.current_room
-		print("Values:", visited[next_room.id].values())
+		
+		# If any "?" in the room's values, return that room
 		if '?' in visited[next_room.id].values():
 			return next_room
 
+# Set up initial traversal graph with starting room
+if current_room.id not in visited:
+	curr_exits = current_room.get_exits() # ["n"]
+
+	# build up visited dictionary with exits not visited -> {"n": "?", "s": "?", "w": "?", "e": "?"}
+	exits = {}
+	for ext in curr_exits:
+		exits[ext] = "?"
+		visited[current_room.id] = exits
 
 while len(visited) < len(world.rooms):
-	# put current room in visited  with empty routes
-	if current_room.id not in visited:
-		curr_exits = current_room.get_exits() # ["n"]
-
-		exits = {}
-		# build up current visited dictionary with exits not visited -> {"n": "?", "s": "?", "w": "?", "e": "?"}
-		for ext in curr_exits:
-			exits[ext] = "?"
-			visited[current_room.id] = exits
-		
+	
+	# Get the next direction
 	next_room_direction = find_next_move(visited, current_room)
 
 	# If at a dead end find a room with exits = "?"
 	if next_room_direction is None:
 		# Backtrack until valid exits are found
-		new_room = find_unexplored_room()
-		current_room = new_room
-		print(new_room)
+		new_room = find_unexplored_room_exits()
+		current_room = new_room 
 	else:
-	# Add direction to path, move into next room
+		# Add direction to path, move into next room
 		player.travel(next_room_direction)
 		traversal_path.append(next_room_direction)
 
@@ -116,18 +89,19 @@ while len(visited) < len(world.rooms):
 		current_room = player.current_room # set current room to new room
 		# print("prev", previous_room.id)
 
-		
-		# update visiteds
+		# update visited
 		new_exits = {}
 		for ext in current_room.get_exits():
 			new_exits[ext] = "?"
 			visited[current_room.id] = new_exits
 
-		visited[previous_room.id][next_room_direction] = current_room.id # set previous room direction to new room
-		visited[current_room.id][opposite_directions[next_room_direction]] = previous_room.id #set new room direction 
+		# set previous room direction to new room
+		visited[previous_room.id][next_room_direction] = current_room.id
+		#set new room direction 
+		visited[current_room.id][opposite_directions[next_room_direction]] = previous_room.id
 
-	print("next room in direction:", next_room_direction)
-	print("visited:", visited)
+	# print("next room in direction:", next_room_direction)
+	# print("visited:", visited)
 
 
 # TRAVERSAL TEST
