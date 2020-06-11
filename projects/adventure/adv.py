@@ -13,8 +13,8 @@ world = World()
 # map_file = "maps/test_line.txt"
 # map_file = "maps/test_cross.txt"
 # map_file = "maps/test_loop.txt"
-map_file = "maps/test_loop_fork.txt"
-# map_file = "maps/main_maze.txt"
+# map_file = "maps/test_loop_fork.txt"
+map_file = "maps/main_maze.txt"
 
 # Loads the map into a dictionary
 room_graph = literal_eval(open(map_file, "r").read())
@@ -36,7 +36,7 @@ reversed_direction = []
 current_room = starting_room
 
 # Return a direction that is unexplored
-def find_next_move(visited, current_room):
+def find_next_move(current_room):
 		curr_room = current_room.id
 		room_exits = visited[curr_room]
 		
@@ -71,7 +71,7 @@ if current_room.id not in visited:
 while len(visited) < len(world.rooms):
 	
 	# Get the next direction
-	next_room_direction = find_next_move(visited, current_room)
+	next_room_direction = find_next_move(current_room)
 
 	# If at a dead end find a room with exits = "?"
 	if next_room_direction is None:
